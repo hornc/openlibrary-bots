@@ -23,10 +23,15 @@ if __name__ == '__main__':
             isni = isni.replace(' ', '')
             #print("DEBUG", qnum, olid, viaf, isni)
             e = ol.get(olid)
-            assert e.type.get('key') == '/type/author'
+            try:
+                assert e.type.get('key') == '/type/author'
+            except AssertionError:
+                 print('REDIRECT: ', olid, e.type.get('key'), e.location)
+                 continue
             ids_ = {'wikidata': qnum}
             if viaf: ids_['viaf'] = viaf
             if isni: ids_['isni'] = isni
+            msg = None
             try:
                 add = [] 
                 if not e.remote_ids.get('wikidata'):
@@ -36,11 +41,13 @@ if __name__ == '__main__':
                 if not e.remote_ids.get('viaf'):
                     add.append('VIAF')
                 e.remote_ids = {**ids_, **e.remote_ids}
-                msg = 'add ' + ','.join(add)
+                if add:
+                    msg = 'add ' + ','.join(add)
             except AttributeError:
                 msg = 'add ids'
                 e.remote_ids = ids_
-            r = e.save(msg)
-            print(olid, msg, e.remote_ids, r)
+            if msg:
+                r = e.save(msg)
+                print(olid, msg, e.remote_ids, r)
 
 
